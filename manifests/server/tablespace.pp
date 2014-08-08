@@ -2,7 +2,8 @@
 define postgresql::server::tablespace(
   $location,
   $owner   = undef,
-  $spcname = $title
+  $spcname = $title,
+  $host    = $postgresql::server::host
 ) {
   $user      = $postgresql::server::user
   $group     = $postgresql::server::group
@@ -13,6 +14,7 @@ define postgresql::server::tablespace(
     psql_user  => $user,
     psql_group => $group,
     psql_path  => $psql_path,
+    host       => $host,
     port       => $port,
   }
 

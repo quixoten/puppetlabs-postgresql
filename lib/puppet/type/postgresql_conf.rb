@@ -8,7 +8,11 @@ module Puppet
     newparam(:name) do
       desc "The postgresql parameter name to manage."
       isnamevar
+    end
 
+    newproperty(:key) do
+      desc "The key of the parameter."
+      defaultto { @resource[:name] }
       newvalues(/^[\w\.]+$/)
     end
 

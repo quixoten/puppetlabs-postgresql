@@ -6,6 +6,7 @@ class postgresql::server::service {
   $service_provider = $postgresql::server::service_provider
   $service_status   = $postgresql::server::service_status
   $user             = $postgresql::server::user
+  $host             = $postgresql::server::host
   $port             = $postgresql::server::port
   $default_database = $postgresql::server::default_database
 
@@ -29,6 +30,7 @@ class postgresql::server::service {
     postgresql::validate_db_connection { 'validate_service_is_running':
       run_as          => $user,
       database_name   => $default_database,
+      database_host   => $host,
       database_port   => $port,
       sleep           => 1,
       tries           => 60,

@@ -1,8 +1,8 @@
 # This defined types creates database schemas. See README.md for more details.
 define postgresql::server::schema(
   $db,
-  $owner  = undef,
-  $schema = $title,
+  $owner   = undef,
+  $schema  = $title
 ) {
   $user      = $postgresql::server::user
   $group     = $postgresql::server::group

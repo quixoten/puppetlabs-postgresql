@@ -4,11 +4,15 @@ define postgresql::server::database_grant(
   $db,
   $role,
   $psql_db   = undef,
-  $psql_user = undef
+  $psql_user = undef,
+  $host      = $postgresql::server::host,
+  $port      = $postgresql::server::port,
 ) {
   postgresql::server::grant { "database:${name}":
     role        => $role,
     db          => $db,
+    host        => $host,
+    port        => $port,
     privilege   => $privilege,
     object_type => 'DATABASE',
     object_name => $db,

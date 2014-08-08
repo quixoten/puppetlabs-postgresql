@@ -42,7 +42,7 @@ define postgresql::server::pg_hba_rule(
     join(["The auth_method you specified [${auth_method}] must be one of: ", join($allowed_auth_methods, ', ')],''))
 
     # Create a rule fragment
-    $fragname = "pg_hba_rule_${name}"
+    $fragname = "pg_hba_rule_${title}"
     concat::fragment { $fragname:
       target  => $target,
       content => template('postgresql/pg_hba_rule.conf'),

@@ -6,13 +6,14 @@ define postgresql::server::database(
   $template   = 'template0',
   $encoding   = $postgresql::server::encoding,
   $locale     = $postgresql::server::locale,
-  $istemplate = false
+  $istemplate = false,
+  $host       = $postgresql::server::host,
+  $port       = $postgresql::server::port,
 ) {
   $createdb_path = $postgresql::server::createdb_path
   $user          = $postgresql::server::user
   $group         = $postgresql::server::group
   $psql_path     = $postgresql::server::psql_path
-  $port          = $postgresql::server::port
   $version       = $postgresql::server::version
   $default_db    = $postgresql::server::default_database
 
@@ -21,6 +22,7 @@ define postgresql::server::database(
     psql_user  => $user,
     psql_group => $group,
     psql_path  => $psql_path,
+    host       => $host,
     port       => $port,
   }
 
@@ -37,6 +39,11 @@ define postgresql::server::database(
     $public_revoke_privilege = 'ALL'
   }
 
+  $host_option = $host ? {
+    undef   => '',
+    default => "--host='${host}' ",
+  }
+
   $encoding_option = $encoding ? {
     undef   => '',
     default => "--encoding '${encoding}' ",
@@ -47,13 +54,12 @@ define postgresql::server::database(
     default => "--tablespace='${tablespace}' ",
   }
 
-  $createdb_command = "${createdb_path} --port='${port}' --owner='${owner}' --template=${template} ${encoding_option}${locale_option}${tablespace_option} '${dbname}'"
+  $createdb_command = "${createdb_path} --port='${port}' --owner='${owner}' --template=${template} ${host_option}${encoding_option}${locale_option}${tablespace_option} '${dbname}'"
 
-  postgresql_psql { "Check for existence of db '${dbname}'":
+  postgresql_psql { "${title}: Check for existence of db '${dbname}'":
     command => 'SELECT 1',
     unless  => "SELECT datname FROM pg_database WHERE datname='${dbname}'",
     db      => $default_db,
-    port    => $port,
     require => Class['postgresql::server::service']
   }~>
   exec { $createdb_command :
@@ -64,16 +70,17 @@ define postgresql::server::database(
 
   # This will prevent users from connecting to the database unless they've been
   #  granted privileges.
-  postgresql_psql {"REVOKE ${public_revoke_privilege} ON DATABASE \"${dbname}\" FROM public":
+  postgresql_psql {"${title}: Setup public revoke privilege on db '${dbname}'":
+    command     => "REVOKE ${public_revoke_privilege} ON DATABASE \"${dbname}\" FROM public",
     db          => $default_db,
-    port        => $port,
     refreshonly => true,
   }
 
   Exec [ $createdb_command ]->
-  postgresql_psql {"UPDATE pg_database SET datistemplate = ${istemplate} WHERE datname = '${dbname}'":
-    unless => "SELECT datname FROM pg_database WHERE datname = '${dbname}' AND datistemplate = ${istemplate}",
-    db     => $default_db,
+  postgresql_psql {"${title}: Set datistemplate on db '${dbname} '":
+    command => "UPDATE pg_database SET datistemplate = ${istemplate} WHERE datname = '${dbname}'",
+    unless  => "SELECT datname FROM pg_database WHERE datname = '${dbname}' AND datistemplate = ${istemplate}",
+    db      => $default_db,
   }
 
   # Build up dependencies on tablespace

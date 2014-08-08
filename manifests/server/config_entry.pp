@@ -1,8 +1,9 @@
 # Manage a postgresql.conf entry. See README.md for more details.
 define postgresql::server::config_entry (
   $ensure = 'present',
+  $key    = $title,
   $value  = undef,
-  $path   = false
+  $path   = false,
 ) {
   $postgresql_conf_path = $postgresql::server::postgresql_conf_path
 
@@ -15,7 +16,7 @@ define postgresql::server::config_entry (
     logoutput => 'on_failure',
   }
 
-  case $name {
+  case $key {
     /data_directory|hba_file|ident_file|include|listen_addresses|port|max_connections|superuser_reserved_connections|unix_socket_directory|unix_socket_group|unix_socket_permissions|bonjour|bonjour_name|ssl|ssl_ciphers|shared_buffers|max_prepared_transactions|max_files_per_process|shared_preload_libraries|wal_level|wal_buffers|archive_mode|max_wal_senders|hot_standby|logging_collector|silent_mode|track_activity_query_size|autovacuum_max_workers|autovacuum_freeze_max_age|max_locks_per_transaction|max_pred_locks_per_transaction|restart_after_crash|lc_messages|lc_monetary|lc_numeric|lc_time/: {
       Postgresql_conf {
         notify => Class['postgresql::server::service'],
@@ -35,7 +36,7 @@ define postgresql::server::config_entry (
   # file.
   if $::osfamily == 'RedHat' {
     if $::operatingsystemrelease =~ /^7/ or $::operatingsystem == 'Fedora' {
-      if $name == 'port' {
+      if $key == 'port' {
         file { 'systemd-port-override':
           ensure  => present,
           path    => '/etc/systemd/system/postgresql.service',
@@ -52,7 +53,7 @@ define postgresql::server::config_entry (
         }
       }
     } else {
-      if $name == 'port' {
+      if $key == 'port' {
         # We need to force postgresql to stop before updating the port
         # because puppet becomes confused and is unable to manage the
         # service appropriately.
@@ -78,9 +79,10 @@ define postgresql::server::config_entry (
 
   case $ensure {
     /present|absent/: {
-      postgresql_conf { $name:
+      postgresql_conf { $title:
         ensure  => $ensure,
         target  => $target,
+        key     => $key,
         value   => $value,
         require => Class['postgresql::server::initdb'],
       }
