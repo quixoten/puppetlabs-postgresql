@@ -5,7 +5,7 @@ class postgresql::repo (
   case $::osfamily {
     'RedHat', 'Linux': {
       if $version == undef {
-        fail("The parameter 'version' for 'postgresql::repo' is undefined. You must always define it when osfamily == Redhat or Linux")
+        fail('The parameter "version" for "postgresql::repo" is undefined. You must always define it when osfamily == Redhat or Linux')
       }
       class { 'postgresql::repo::yum_postgresql_org': }
     }
